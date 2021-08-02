@@ -5,8 +5,8 @@ on:
   workflow_dispatch:
   # 定时触发
   schedule:
-    # 每12小时获取一次
-    - cron: '0 */12 * * *'
+    # 每6小时获取一次
+    - cron: '0 */6 * * *'
 
 jobs:
   deploy:
