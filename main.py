@@ -46,7 +46,7 @@ def send_mail(mail_list):
         smtpObj = smtplib.SMTP_SSL(mail_host, mail_port)
         smtpObj.login(mail_user, mail_pwd)
         smtpObj.sendmail(sender, receivers, message.as_string())
-        print("邮件发送成功")
+        print(f"邮件发送成功: {mail_list}")
     except smtplib.SMTPException as e:
         print("Error: 无法发送邮件", str(e))
 
