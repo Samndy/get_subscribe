@@ -23,6 +23,7 @@ def write_log(content, level="INFO"):
 
     date_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
     update_log = f"[{date_str}] [{level}] {content}\n"
+    print(update_log)
     with open(f'./log/{time.strftime("%Y-%m", time.localtime(time.time()))}-update.log', 'a', encoding="utf-8") as f:
         f.write(update_log)
 
@@ -71,40 +72,46 @@ def get_subscribe_url():
         write_log("更新失败！无法拉取原网站内容", "ERROR")
         return
     update_list = []
-    for i in entries:
-        summary = i.get("summary")
-        v2ray_list = re.findall(r"v2ray\(若无法更新请开启代理后再拉取\)：(.+?)</div>", summary)
-        # 获取普通订阅链接
-        if v2ray_list:
-            v2ray_url = v2ray_list[-1].replace('amp;', '')
-            v2ray_req = requests.request("GET", v2ray_url, verify=False)
-            v2ray_code = v2ray_req.status_code
-            if v2ray_code not in ok_code:
-                write_log(f"获取 v2ray 订阅失败：{v2ray_url} - {v2ray_code}", "WARN")
-            else:
-                update_list.append(f"v2ray: {v2ray_code}")
-                with open(dirs + '/v2ray.txt', 'w', encoding="utf-8") as f:
-                    f.write(v2ray_req.text)
-        clash_list = re.findall(r"clash\(若无法更新请开启代理后再拉取\)：(.+?)</div>", summary)
-        # 获取clash订阅链接
-        if clash_list:
-            clash_url = clash_list[-1].replace('amp;', '')
-            clash_req = requests.request("GET", clash_url, verify=False)
-            clash_code = clash_req.status_code
-            if clash_code not in ok_code:
-                write_log(f"获取 clash 订阅失败：{clash_url} - {clash_code}", "WARN")
-            else:
-                update_list.append(f"clash: {clash_code}")
-                with open(dirs + '/clash.yml', 'w', encoding="utf-8") as f:
-                    clash_content = clash_req.content.decode("utf-8")
-                    clash_content = clash_content.replace('https://www.mattkaydiary.com', "干死日本鬼子")
-                    f.write(clash_content)
-        if update_list:
+    summary = entries[0].get("summary")
+    if not summary:
+        write_log("暂时没有可用的订阅更新", "WARN")
+        return
+    v2ray_list = re.findall(r"v2ray\(若无法更新请开启代理后再拉取\)：(.+?)</div>", summary)
+    # 获取普通订阅链接
+    if v2ray_list:
+        v2ray_url = v2ray_list[-1].replace('amp;', '')
+        v2ray_req = requests.request("GET", v2ray_url, verify=False)
+        v2ray_code = v2ray_req.status_code
+        if v2ray_code not in ok_code:
+            write_log(f"获取 v2ray 订阅失败：{v2ray_url} - {v2ray_code}", "WARN")
+        else:
+            update_list.append(f"v2ray: {v2ray_code}")
+            with open(dirs + '/v2ray.txt', 'w', encoding="utf-8") as f:
+                f.write(v2ray_req.text)
+    clash_list = re.findall(r"clash\(若无法更新请开启代理后再拉取\)：(.+?)</div>", summary)
+    # 获取clash订阅链接
+    if clash_list:
+        clash_url = clash_list[-1].replace('amp;', '')
+        clash_req = requests.request("GET", clash_url, verify=False)
+        clash_code = clash_req.status_code
+        if clash_code not in ok_code:
+            write_log(f"获取 clash 订阅失败：{clash_url} - {clash_code}", "WARN")
+        else:
+            update_list.append(f"clash: {clash_code}")
+            with open(dirs + '/clash.yml', 'w', encoding="utf-8") as f:
+                clash_content = clash_req.content.decode("utf-8")
+                clash_content = clash_content.replace('https://www.mattkaydiary.com', "干死日本鬼子")
+                f.write(clash_content)
+    if update_list:
+        file_pat = re.compile(r"v2ray\.txt|clash\.yml")
+        if file_pat.search(os.popen("git status").read()):
+            write_log(f"更新成功：{update_list}", "INFO")
             if mail_flag:
                 send_mail(get_mail())
-            write_log(f"更新成功：{update_list}", "INFO")
-            return
-    write_log(f"未能获取新的更新内容", "WARN")
+        else:
+            write_log(f"订阅暂未更新", "WARN")
+    else:
+        write_log(f"未能获取新的更新内容", "WARN")
 
 
 def main():
