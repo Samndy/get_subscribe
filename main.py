@@ -14,6 +14,10 @@ requests.packages.urllib3.disable_warnings()
 
 ok_code = [200, 201, 202, 203, 204, 205, 206]
 
+# 邮箱域名过滤列表
+blackhole_list = ["cnr.cn", "cyberpolice.cn", "gov.cn", "samr.gov.cn", "12321.cn"
+                  "miit.gov.cn", "chinatcc.gov.cn"]
+
 
 def write_log(content, level="INFO"):
 
@@ -24,12 +28,15 @@ def write_log(content, level="INFO"):
 
 def get_mail():
     comments = requests.get("https://api.github.com/repos/ermaozi/get_subscribe/issues/1/comments")
-    mail_re = re.compile("([a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z0-9]+)")
+    mail_re = re.compile("([\w\.\-+_]+@[\w\.\-+_]+\.\w+)")
     mail_list = []
     for i in comments.json():
         body = i.get("body")
-        mail_list.extend(mail_re.findall(body))
-    return mail_list
+        mails = mail_re.findall(body)
+        for mail in mails:
+            if mail.split("@")[-1] not in blackhole_list:
+                mail_list.append(mail_list)
+    return list(set(mail_list))
 
 
 def send_mail(mail_list):
