@@ -35,7 +35,7 @@ def get_mail():
         mails = mail_re.findall(body)
         for mail in mails:
             if mail.split("@")[-1] not in blackhole_list:
-                mail_list.append(mail_list)
+                mail_list.append(mail)
     return list(set(mail_list))
 
 
